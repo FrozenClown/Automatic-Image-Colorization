@@ -43,15 +43,16 @@ def read_image(filename_queue):
     :param filename_queue: the filename queue for image files
     :return: image with RGB color space
     """
-    # Read the image with RGB color space
-    reader = tf.WholeFileReader()
-    key, content = reader.read(filename_queue)
-    rgb_image = tf.image.decode_jpeg(content, channels=3, name="decoded_jpg")
-    # Resize image to the right image_size
-    rgb_image = tf.image.resize_images(rgb_image, [image_size, image_size], method=input_resize_method)
-    # Make pixel element value in [0, 1)
-    rgb_image = tf.div(tf.cast(rgb_image, tf.float32), 255, name="float_image")
-    return rgb_image
+    with tf.name_scope("read_image"):
+        # Read the image with RGB color space
+        reader = tf.WholeFileReader()
+        key, content = reader.read(filename_queue)
+        rgb_image = tf.image.decode_jpeg(content, channels=3, name="decoded_jpg")
+        # Resize image to the right image_size
+        rgb_image = tf.image.resize_images(rgb_image, [image_size, image_size], method=input_resize_method)
+        # Make pixel element value in [0, 1)
+        rgb_image = tf.div(tf.cast(rgb_image, tf.float32), 255, name="float_image")
+        return rgb_image
 
 
 def input_pipeline(filenames, b_size, num_epochs=None, shuffle=False, test=False):

@@ -43,23 +43,6 @@ class ResidualEncoder(object):
     @staticmethod
     def batch_normal(input_data, scope, training_flag, depth):
         """
-        Doing batch normalization
-        :param input_data: the input data
-        :param scope: scope
-        :param training_flag: the flag indicate if it is training
-        :param depth: depth for batch normalizer
-        :return: normalized data
-        """
-        with tf.variable_scope(scope):
-            ewma = tf.train.ExponentialMovingAverage(decay=0.9999)
-            bn = ConvolutionalBatchNormalizer(depth, 0.001, ewma, True)
-            update_assignments = bn.get_assigner()
-            x = bn.normalize(input_data, train=training_flag)
-        return x
-
-    @staticmethod
-    def batch_normal_new(input_data, scope, training_flag):
-        """
         Doing batch normalization, this is the new version with build-in batch_norm function
         :param input_data: the input data
         :param scope: scope
@@ -67,11 +50,11 @@ class ResidualEncoder(object):
         :return: normalized data
         """
         return tf.cond(training_flag,
-                       lambda: batch_norm(input_data, decay=0.9999, is_training=True, center=True, scale=True,
+                       lambda: batch_norm(input_data, decay=0.9, is_training=True, center=True, scale=True,
                                           updates_collections=None, scope=scope),
-                       lambda: batch_norm(input_data, decay=0.9999, is_training=False, center=True, scale=True,
+                       lambda: batch_norm(input_data, decay=0.9, is_training=False, center=True, scale=True,
                                           updates_collections=None, scope=scope, reuse=True),
-                       name='batch_normalization')
+                       name='batch_normal')
 
     def conv_layer(self, layer_input, scope, is_training, relu=True, bn=True):
         """
@@ -87,7 +70,7 @@ class ResidualEncoder(object):
             weight = self.get_weight(scope)
             output = tf.nn.conv2d(layer_input, weight, strides=[1, 1, 1, 1], padding='SAME', name="conv")
             if bn:
-                output = self.batch_normal(output, training_flag=is_training, scope=scope, depth=weight.get_shape()[3])
+                output = self.batch_normal(output, scope, is_training, weight.get_shape()[3])
             if relu:
                 output = tf.nn.relu(output, name="relu")
             else:
